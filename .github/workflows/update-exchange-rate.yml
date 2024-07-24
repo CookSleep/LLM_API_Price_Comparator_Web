@@ -10,38 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.x'
-    
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests
-    
     - name: Fetch exchange rate
       run: |
-        python - <<EOF
-        import requests
-        import json
-        import datetime
-        
-        url = "https://query1.finance.yahoo.com/v8/finance/chart/USDCNY=X?interval=1d"
-        response = requests.get(url)
-        data = response.json()
-        
-        rate = data['chart']['result'][0]['meta']['regularMarketPrice']
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        with open('exchange_rate.json', 'w') as f:
-            json.dump({"rate": rate, "timestamp": timestamp}, f)
-        EOF
-    
+        python .github/scripts/fetch_exchange_rate.py
     - name: Commit and push if changed
       run: |
-        git config --global user.email "action@github.com"
-        git config --global user.name "GitHub Action"
+        git config --global user.name 'GitHub Action'
+        git config --global user.email 'action@github.com'
         git add exchange_rate.json
         git diff --quiet && git diff --staged --quiet || (git commit -m "Update exchange rate" && git push)
