@@ -17,13 +17,8 @@ jobs:
         env:
           ALPHA_VANTAGE_API_KEY: ${{ secrets.ALPHA_VANTAGE_API_KEY }}
         run: |
-          EXCHANGE_RATE=$(curl -s "https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=CNY&apikey=$ALPHA_VANTAGE_API_KEY" | jq -r '.["Realtime Currency Exchange Rate"]["5. Exchange Rate"]')
-          echo "Exchange rate: $EXCHANGE_RATE"
-          echo "::set-output name=exchange_rate::$EXCHANGE_RATE"
-
-      - name: Update exchange rate file
-        run: |
-          echo "{ \"exchangeRate\": \"$EXCHANGE_RATE\" }" > exchange_rate.json
+          python -m pip install requests
+          python update_exchange_rate.py
 
       - name: Commit and push changes
         run: |
