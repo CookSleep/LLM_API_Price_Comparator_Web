@@ -166,7 +166,7 @@ function displayResults(results) {
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('result-item', 'slide-down');
+        resultItem.classList.add('result-item', 'result-item-fade-in');
         resultItem.style.animationDelay = `${index * 0.05}s`;
         resultItem.innerHTML = `
             <span class="rank">#${index + 1}</span>
@@ -185,7 +185,7 @@ function animateResultsContainer(fromHeight, toHeight) {
     const resultsContainer = document.querySelector('.results');
     resultsContainer.style.height = `${fromHeight}px`;
     resultsContainer.style.transition = 'height 0.5s ease-in-out';
-    
+
     requestAnimationFrame(() => {
         resultsContainer.style.height = `${toHeight}px`;
     });
@@ -229,8 +229,8 @@ function clearResultsList(container, items) {
         const originalHeight = container.offsetHeight;
 
         items.forEach((item, index) => {
-            item.classList.remove('slide-down');
-            item.classList.add('slide-up');
+            item.classList.remove('result-item-fade-in');
+            item.classList.add('result-item-fade-out');
             item.style.animationDelay = `${index * 0.05}s`;
         });
 
