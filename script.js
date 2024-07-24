@@ -92,7 +92,7 @@ function getExchangeRate() {
             return response.json();
         })
         .then(data => {
-            exchangeRate = parseFloat(data['Realtime Currency Exchange Rate']['5. Exchange Rate']);
+            exchangeRate = parseFloat(data.exchangeRate);
             exchangeRateValue.textContent = exchangeRate.toFixed(4);
             exchangeRateValue.className = '';
         })
@@ -160,10 +160,14 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
-    resultsList.innerHTML = '';
+    const resultsContainer = document.querySelector('.results');
 
-    const originalHeight = resultsList.offsetHeight;
     const tempContainer = document.createElement('div');
+    tempContainer.style.visibility = 'hidden';
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.top = '0';
+    tempContainer.style.left = '0';
+    tempContainer.style.width = '100%';
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
@@ -176,24 +180,36 @@ function displayResults(results) {
         tempContainer.appendChild(resultItem);
     });
 
+    resultsContainer.appendChild(tempContainer);
     const newHeight = tempContainer.scrollHeight;
+    resultsContainer.removeChild(tempContainer);
 
-    // Set the new height before starting the animation
+    resultsContainer.style.height = `${resultsContainer.offsetHeight}px`;
+    resultsContainer.style.transition = 'height 0.5s ease-in-out';
+
     requestAnimationFrame(() => {
-        animateResultsContainer(originalHeight, newHeight, () => {
-            results.forEach((r, index) => {
-                const resultItem = document.createElement('div');
-                resultItem.classList.add('result-item', 'slide-down');
-                resultItem.style.animationDelay = `${index * 0.05}s`;
-                resultItem.innerHTML = `
-                    <span class="rank">#${index + 1}</span>
-                    <span class="provider">${r.name}</span>
-                    <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
-                `;
-                resultsList.appendChild(resultItem);
-            });
-        });
+        resultsContainer.style.height = `${newHeight}px`;
     });
+
+    setTimeout(() => {
+        resultsList.innerHTML = '';
+        results.forEach((r, index) => {
+            const resultItem = document.createElement('div');
+            resultItem.classList.add('result-item', 'slide-down');
+            resultItem.style.animationDelay = `${index * 0.05}s`;
+            resultItem.innerHTML = `
+                <span class="rank">#${index + 1}</span>
+                <span class="provider">${r.name}</span>
+                <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
+            `;
+            resultsList.appendChild(resultItem);
+        });
+
+        setTimeout(() => {
+            resultsContainer.style.height = 'auto';
+            resultsContainer.style.transition = '';
+        }, 500);
+    }, 500);
 }
 
 function animateResultsContainer(fromHeight, toHeight, callback) {
@@ -252,9 +268,17 @@ function clearResultsList(container, items) {
 
         setTimeout(() => {
             container.innerHTML = '';
-            animateResultsContainer(originalHeight, container.scrollHeight);
-            resultsContainerHeight = container.scrollHeight;
-            resolve();
+            container.style.height = `${originalHeight}px`;
+            container.style.transition = 'height 0.5s ease-in-out';
+
+            requestAnimationFrame(() => {
+                container.style.height = 'auto';
+            });
+
+            setTimeout(() => {
+                container.style.transition = '';
+                resolve();
+            }, 500);
         }, 500);
     });
 }
