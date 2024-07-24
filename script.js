@@ -162,11 +162,13 @@ function displayResults(results) {
     const resultsContainer = document.querySelector('.results');
 
     const title = resultsContainer.querySelector('h3');
+    const disclaimer = resultsContainer.querySelector('.results-disclaimer');
     resultsContainer.innerHTML = '';
     resultsContainer.appendChild(title);
+    resultsContainer.appendChild(disclaimer);
 
     const originalHeight = resultsContainer.offsetHeight;
-    
+
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('result-item', 'slide-down');
@@ -257,7 +259,6 @@ function clearAllRows(rows) {
         const tableContainer = document.querySelector('.table-container');
         const tbody = document.querySelector('#providersTable tbody');
 
-        // 保留前两行，只清除数据
         for (let i = 0; i < Math.min(2, rows.length); i++) {
             clearRowData(rows[i]);
             rows[i].classList.add('collapse-row');

@@ -359,9 +359,9 @@ select {
     border-radius: 12px;
     margin-bottom: 30px;
     box-shadow: var(--main-shadow);
-    transition: height 0.5s ease-in-out, box-shadow 0.3s ease;
-    overflow: hidden;
+    overflow: visible;
     min-height: 100px;
+    transition: height 0.5s ease-in-out, box-shadow 0.3s ease;
 }
 
 .results-disclaimer {
@@ -370,6 +370,8 @@ select {
     margin-top: 10px;
     margin-bottom: 20px;
     line-height: 1.4;
+    position: relative;
+    z-index: 1;
 }
 
 .results:hover {
