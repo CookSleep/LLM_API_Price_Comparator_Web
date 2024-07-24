@@ -209,21 +209,15 @@ function animateResultsContainer(fromHeight, toHeight, callback) {
         resultsContainer.style.height = `${toHeight}px`;
     });
 
-    onTransitionEnd(resultsContainer, () => {
+    const transitionEndHandler = () => {
         resultsContainer.style.height = 'auto';
+        resultsContainer.style.transition = '';
         resultsContainerHeight = toHeight;
         if (callback) callback();
-    });
-}
-
-function onTransitionEnd(element, callback) {
-    const transitionEndHandler = (e) => {
-        if (e.target === element) {
-            element.removeEventListener('transitionend', transitionEndHandler);
-            callback();
-        }
+        resultsContainer.removeEventListener('transitionend', transitionEndHandler);
     };
-    element.addEventListener('transitionend', transitionEndHandler);
+
+    resultsContainer.addEventListener('transitionend', transitionEndHandler);
 }
 
 function clearAllData() {
@@ -472,6 +466,7 @@ function handleEnterKey(element) {
 function addProviderRow(updateFrameHeights = true) {
     const tbody = document.querySelector('#providersTable tbody');
     const row = document.createElement('tr');
+    row.classList.add('expand-row');
     row.innerHTML = `
         <td><input type="text" class="provider-name" placeholder="服务商名称"></td>
         <td><input type="number" class="recharge-amount" placeholder="仅数字" step="any"></td>
@@ -521,10 +516,7 @@ function addProviderRow(updateFrameHeights = true) {
     setupWheelSelection();
 
     if (updateFrameHeights) {
-        requestAnimationFrame(() => {
-            row.classList.add('expand-row');
-            adjustTableContainerHeight(row.offsetHeight);
-        });
+        enqueueAnimation(() => adjustTableContainerHeight(row.offsetHeight));
     }
 }
 
@@ -554,21 +546,15 @@ function deleteRow(row) {
 
 function adjustTableContainerHeight(heightChange, callback) {
     const tableContainer = document.querySelector('.table-container');
-    const currentHeight = tableContainer.offsetHeight;
-    const newHeight = currentHeight + heightChange;
-    
-    tableContainer.style.height = `${currentHeight}px`;
+    const newHeight = tableContainer.offsetHeight + heightChange;
     tableContainer.style.transition = 'height 0.5s ease-in-out';
-    
-    requestAnimationFrame(() => {
-        tableContainer.style.height = `${newHeight}px`;
-    });
+    tableContainer.style.height = `${newHeight}px`;
 
-    onTransitionEnd(tableContainer, () => {
+    setTimeout(() => {
         tableContainer.style.transition = '';
         if (callback) callback();
         playNextAnimation();
-    });
+    }, 500);
 }
 
 function enqueueAnimation(animation) {
@@ -669,4 +655,4 @@ function onAnimationEnd(element, callback) {
     });
 }
 
-adjustFrameHeights();
+adjustFrameHeights()
