@@ -159,15 +159,10 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
-    const resultsContainer = document.querySelector('.results');
+    const resultsList = document.getElementById('results-list');
+    resultsList.innerHTML = '';
 
-    const title = resultsContainer.querySelector('h3');
-    const disclaimer = resultsContainer.querySelector('.results-disclaimer');
-    resultsContainer.innerHTML = '';
-    resultsContainer.appendChild(title);
-    resultsContainer.appendChild(disclaimer);
-
-    const originalHeight = resultsContainer.offsetHeight;
+    const originalHeight = resultsList.offsetHeight;
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
@@ -178,11 +173,11 @@ function displayResults(results) {
             <span class="provider">${r.name}</span>
             <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
         `;
-        resultsContainer.appendChild(resultItem);
+        resultsList.appendChild(resultItem);
     });
 
     requestAnimationFrame(() => {
-        const newHeight = resultsContainer.scrollHeight;
+        const newHeight = resultsList.scrollHeight;
         animateResultsContainer(originalHeight, newHeight);
     });
 }
@@ -207,10 +202,10 @@ function clearAllData() {
     showCustomAlert('确定要清除所有数据吗？').then((confirmed) => {
         if (confirmed) {
             const rows = document.querySelectorAll('#providersTable tbody tr');
-            const resultsContainer = document.querySelector('.results');
-            const resultItems = resultsContainer.querySelectorAll('.result-item');
+            const resultsList = document.getElementById('results-list');
+            const resultItems = resultsList.querySelectorAll('.result-item');
 
-            clearResultsList(resultsContainer, resultItems).then(() => {
+            clearResultsList(resultsList, resultItems).then(() => {
                 return clearAllRows(rows);
             }).then(() => {
                 document.getElementById('inputtokens').value = '';
@@ -241,7 +236,7 @@ function clearResultsList(container, items) {
         });
 
         setTimeout(() => {
-            container.innerHTML = '<h3>费用排名（由低至高）:</h3>';
+            container.innerHTML = '';
             animateResultsContainer(originalHeight, container.scrollHeight);
             resultsContainerHeight = container.scrollHeight;
             resolve();
