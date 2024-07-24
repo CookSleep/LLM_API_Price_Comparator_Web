@@ -25,10 +25,10 @@ jobs:
 
       - name: Commit and push changes
         env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add exchange_rate.json
           git commit -m "Update exchange rate"
-          git push
+          git push origin HEAD:main
