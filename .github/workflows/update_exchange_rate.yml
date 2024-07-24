@@ -5,6 +5,9 @@ on:
     - cron: '30 1 * * *' # 每天UTC时间01:30，相当于北京时间09:30
   workflow_dispatch: # 手动触发
 
+permissions:
+  contents: write
+
 jobs:
   update-exchange-rate:
     runs-on: ubuntu-latest
