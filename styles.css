@@ -143,6 +143,7 @@ h1 {
     transition: color 0.3s ease;
     font-size: 0.9em;
     align-self: flex-start;
+
 }
 
 .github-link:hover {
@@ -508,13 +509,11 @@ select {
 }
 
 .slide-down {
-    animation: slideDown 0.5s forwards;
-    transform-origin: top;
+    animation: slideDown 0.5s ease-out forwards;
 }
 
 .slide-up {
-    animation: slideUp 0.5s forwards;
-    transform-origin: top;
+    animation: slideUp 0.5s ease-out forwards;
 }
 
 input:checked + .slider {
