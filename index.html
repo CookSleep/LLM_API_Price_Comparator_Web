@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM API 价格比较器</title>
+    <link rel="stylesheet" href="/LLM_API_Price_Comparator_Web/styles.css">
+</head>
+<body>
+    <div id="main-content">
+        <div class="container">
+            <header>
+                <div class="logo-container">
+                    <img src="LLM_API_Price_Comparator.png" alt="LLM API 价格比较器 Logo" class="logo">
+                </div>
+                <div class="header-right">
+                    <h1>LLM API 价格比较器
+                        <svg class="info-icon" viewBox="0 0 24 24" width="24" height="24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                        </svg>
+                    </h1>
+                    <div class="tooltip">汇率数据来源：Alpha Vantage API<br>每日更新时间：北京时间 09:30</div>
+                    <div class="exchange-rate-container">
+                        <span id="exchangeRateLabel">今日汇率 (USD/CNY): </span>
+                        <span id="exchangeRateValue">获取中...</span>
+                    </div>
+                    <a href="https://github.com/CookSleep/LLM_API_Price_Comparator_Web" target="_blank" class="github-link">GitHub @CookSleep</a>
+                </div>
+            </header>
+            
+            <div class="input-section">
+                <div class="token-input">
+                    <div>
+                        <label for="inputtokens">输入token数:</label>
+                        <input type="number" id="inputtokens" placeholder="仅数字" step="any">
+                    </div>
+                    <div>
+                        <label for="outputtokens">输出token数:</label>
+                        <input type="number" id="outputtokens" placeholder="仅数字" step="any">
+                    </div>
+                    <div>
+                        <label for="tokenunit">token单位:</label>
+                        <select id="tokenunit">
+                            <option value="1000">K</option>
+                            <option value="1000000">M</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="usage-tips">
+                    <h3>使用提示：</h3>
+                    <ul>
+                        <li>使用键盘方向键可以快速在输入、选择框间移动</li>
+                        <li>使用鼠标滚轮可以快速切换下拉选项</li>
+                        <li>按 Enter 键可以与选择框、下拉菜单选项、按钮交互</li>
+                    </ul>
+                </div>
+            </div>  
+            
+            <div class="table-container">
+                <table id="providersTable">
+                    <thead>
+                        <tr>
+                            <th>服务商名称</th>
+                            <th>充值金额</th>
+                            <th>充值货币</th>
+                            <th>到账余额</th>
+                            <th>输入价格</th>
+                            <th>输出价格</th>
+                            <th>不区分输入输出</th>
+                            <th>token单位</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 表格 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button id="addProviderBtn" class="add-btn">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="16"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+            </button>
+
+            <div class="results">
+                <h3>费用排名（由低至高）:</h3>
+                <p class="results-disclaimer">结果仅供比价参考，贵的可能有贵的道理，便宜也不一定没好货，请以实际体验为准。</p>
+                <!-- 结果 -->
+            </div>          
+
+            <div class="actions">
+                <button id="calculateBtn">计算成本</button>
+                <button id="clearAllBtn">清除所有数据</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customAlert" class="modal">
+        <div class="modal-content">
+            <p id="alertMessage"></p>
+            <div class="alert-buttons">
+                <button id="alertConfirm">确定</button>
+                <button id="alertCancel">取消</button>
+            </div>
+        </div>
+    </div>   
+
+    <script src="/LLM_API_Price_Comparator_Web/script.js"></script>
+</body>
+</html>
