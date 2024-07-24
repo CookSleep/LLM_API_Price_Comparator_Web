@@ -160,14 +160,12 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
+    const resultsContainer = document.querySelector('.results');
+    const originalHeight = resultsContainer.offsetHeight;
     resultsList.innerHTML = '';
-
-    const originalHeight = resultsList.offsetHeight;
-
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('result-item', 'slide-down');
-        resultItem.style.animationDelay = `${index * 0.05}s`;
+        resultItem.classList.add('result-item');
         resultItem.innerHTML = `
             <span class="rank">#${index + 1}</span>
             <span class="provider">${r.name}</span>
@@ -177,15 +175,25 @@ function displayResults(results) {
     });
 
     requestAnimationFrame(() => {
-        const newHeight = resultsList.scrollHeight;
+        const newHeight = resultsContainer.scrollHeight;
         animateResultsContainer(originalHeight, newHeight);
+
+        resultsList.querySelectorAll('.result-item').forEach((item, index) => {
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(-10px)';
+            setTimeout(() => {
+                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                item.style.opacity = '1';
+                item.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
     });
 }
 
 function animateResultsContainer(fromHeight, toHeight) {
     const resultsContainer = document.querySelector('.results');
     resultsContainer.style.height = `${fromHeight}px`;
-    resultsContainer.style.transition = 'height 0.5s ease-in-out';
+    resultsContainer.style.transition = 'height 0.3s ease-in-out';
     
     requestAnimationFrame(() => {
         resultsContainer.style.height = `${toHeight}px`;
@@ -195,7 +203,7 @@ function animateResultsContainer(fromHeight, toHeight) {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
         resultsContainerHeight = toHeight;
-    }, 500);
+    }, 300);
 }
 
 function clearAllData() {
@@ -230,17 +238,19 @@ function clearResultsList(container, items) {
         const originalHeight = container.offsetHeight;
 
         items.forEach((item, index) => {
-            item.classList.remove('slide-down');
-            item.classList.add('slide-up');
-            item.style.animationDelay = `${index * 0.05}s`;
+            setTimeout(() => {
+                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(-10px)';
+            }, index * 50);
         });
 
         setTimeout(() => {
             container.innerHTML = '';
-            animateResultsContainer(originalHeight, container.scrollHeight);
-            resultsContainerHeight = container.scrollHeight;
+            animateResultsContainer(originalHeight, 0);
+            resultsContainerHeight = 0;
             resolve();
-        }, 500);
+        }, items.length * 50 + 300);
     });
 }
 
