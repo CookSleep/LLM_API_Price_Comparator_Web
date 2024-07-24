@@ -160,14 +160,16 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
+    resultsList.innerHTML = '';
+
     const resultsContainer = document.querySelector('.results');
+    const originalHeight = resultsContainer.offsetHeight;
 
     const tempContainer = document.createElement('div');
     tempContainer.style.visibility = 'hidden';
     tempContainer.style.position = 'absolute';
-    tempContainer.style.top = '0';
-    tempContainer.style.left = '0';
-    tempContainer.style.width = '100%';
+    tempContainer.style.width = resultsContainer.offsetWidth + 'px';
+    document.body.appendChild(tempContainer);
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
@@ -180,19 +182,10 @@ function displayResults(results) {
         tempContainer.appendChild(resultItem);
     });
 
-    resultsContainer.appendChild(tempContainer);
-    const newHeight = tempContainer.scrollHeight;
-    resultsContainer.removeChild(tempContainer);
+    const newHeight = tempContainer.offsetHeight;
+    document.body.removeChild(tempContainer);
 
-    resultsContainer.style.height = `${resultsContainer.offsetHeight}px`;
-    resultsContainer.style.transition = 'height 0.5s ease-in-out';
-
-    requestAnimationFrame(() => {
-        resultsContainer.style.height = `${newHeight}px`;
-    });
-
-    setTimeout(() => {
-        resultsList.innerHTML = '';
+    animateResultsContainer(originalHeight, newHeight, () => {
         results.forEach((r, index) => {
             const resultItem = document.createElement('div');
             resultItem.classList.add('result-item', 'slide-down');
@@ -204,29 +197,27 @@ function displayResults(results) {
             `;
             resultsList.appendChild(resultItem);
         });
-
-        setTimeout(() => {
-            resultsContainer.style.height = 'auto';
-            resultsContainer.style.transition = '';
-        }, 500);
-    }, 500);
+    });
 }
 
 function animateResultsContainer(fromHeight, toHeight, callback) {
     const resultsContainer = document.querySelector('.results');
     resultsContainer.style.height = `${fromHeight}px`;
     resultsContainer.style.transition = 'height 0.5s ease-in-out';
-    
+
     requestAnimationFrame(() => {
         resultsContainer.style.height = `${toHeight}px`;
     });
 
-    setTimeout(() => {
+    const transitionEndHandler = () => {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
         resultsContainerHeight = toHeight;
         if (callback) callback();
-    }, 500);
+        resultsContainer.removeEventListener('transitionend', transitionEndHandler);
+    };
+
+    resultsContainer.addEventListener('transitionend', transitionEndHandler);
 }
 
 function clearAllData() {
@@ -268,17 +259,9 @@ function clearResultsList(container, items) {
 
         setTimeout(() => {
             container.innerHTML = '';
-            container.style.height = `${originalHeight}px`;
-            container.style.transition = 'height 0.5s ease-in-out';
-
-            requestAnimationFrame(() => {
-                container.style.height = 'auto';
-            });
-
-            setTimeout(() => {
-                container.style.transition = '';
-                resolve();
-            }, 500);
+            animateResultsContainer(originalHeight, container.scrollHeight);
+            resultsContainerHeight = container.scrollHeight;
+            resolve();
         }, 500);
     });
 }
