@@ -161,8 +161,11 @@ function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
     const resultsContainer = document.querySelector('.results');
-    const originalHeight = resultsContainer.offsetHeight;
+
     resultsList.innerHTML = '';
+
+    const originalHeight = resultsContainer.offsetHeight;
+
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('result-item');
@@ -174,26 +177,32 @@ function displayResults(results) {
         resultsList.appendChild(resultItem);
     });
 
-    requestAnimationFrame(() => {
-        const newHeight = resultsContainer.scrollHeight;
-        animateResultsContainer(originalHeight, newHeight);
+    const newHeight = resultsList.scrollHeight + 
+                      parseFloat(getComputedStyle(resultsContainer).paddingTop) + 
+                      parseFloat(getComputedStyle(resultsContainer).paddingBottom);
 
-        resultsList.querySelectorAll('.result-item').forEach((item, index) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateY(-10px)';
-            setTimeout(() => {
-                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0)';
-            }, index * 50);
+    requestAnimationFrame(() => {
+        resultsContainer.style.height = `${newHeight}px`;
+        resultsContainer.style.transition = 'height 0.5s ease-in-out';
+        
+        results.forEach((_, index) => {
+            const resultItem = resultsList.children[index];
+            resultItem.classList.add('slide-down');
+            resultItem.style.animationDelay = `${index * 0.05}s`;
         });
     });
+
+    setTimeout(() => {
+        resultsContainer.style.height = 'auto';
+        resultsContainer.style.transition = '';
+        resultsContainerHeight = newHeight;
+    }, 500);
 }
 
 function animateResultsContainer(fromHeight, toHeight) {
     const resultsContainer = document.querySelector('.results');
     resultsContainer.style.height = `${fromHeight}px`;
-    resultsContainer.style.transition = 'height 0.3s ease-in-out';
+    resultsContainer.style.transition = 'height 0.5s ease-in-out';
     
     requestAnimationFrame(() => {
         resultsContainer.style.height = `${toHeight}px`;
@@ -203,7 +212,7 @@ function animateResultsContainer(fromHeight, toHeight) {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
         resultsContainerHeight = toHeight;
-    }, 300);
+    }, 500);
 }
 
 function clearAllData() {
@@ -211,46 +220,39 @@ function clearAllData() {
         if (confirmed) {
             const rows = document.querySelectorAll('#providersTable tbody tr');
             const resultsList = document.getElementById('results-list');
+            const resultsContainer = document.querySelector('.results');
+
             const resultItems = resultsList.querySelectorAll('.result-item');
+            const originalHeight = resultsContainer.offsetHeight;
 
-            clearResultsList(resultsList, resultItems).then(() => {
-                return clearAllRows(rows);
-            }).then(() => {
-                document.getElementById('inputtokens').value = '';
-                document.getElementById('outputtokens').value = '';
-                document.getElementById('tokenunit').selectedIndex = 0;
-                clearErrors();
-                ensureMinimumRows();
-                updateNavigationArray();
-                adjustFrameHeights();
+            resultItems.forEach((item, index) => {
+                item.classList.remove('slide-down');
+                item.classList.add('slide-up');
+                item.style.animationDelay = `${index * 0.05}s`;
             });
-        }
-    });
-}
 
-function clearResultsList(container, items) {
-    return new Promise((resolve) => {
-        if (items.length === 0) {
-            resolve();
-            return;
-        }
+            requestAnimationFrame(() => {
+                resultsContainer.style.height = `${originalHeight}px`;
+                resultsContainer.style.transition = 'height 0.5s ease-in-out';
+            });
 
-        const originalHeight = container.offsetHeight;
-
-        items.forEach((item, index) => {
             setTimeout(() => {
-                item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                item.style.opacity = '0';
-                item.style.transform = 'translateY(-10px)';
-            }, index * 50);
-        });
+                resultsList.innerHTML = '';
+                resultsContainer.style.height = 'auto';
+                resultsContainer.style.transition = '';
+                resultsContainerHeight = resultsContainer.offsetHeight;
 
-        setTimeout(() => {
-            container.innerHTML = '';
-            animateResultsContainer(originalHeight, 0);
-            resultsContainerHeight = 0;
-            resolve();
-        }, items.length * 50 + 300);
+                clearAllRows(rows).then(() => {
+                    document.getElementById('inputtokens').value = '';
+                    document.getElementById('outputtokens').value = '';
+                    document.getElementById('tokenunit').selectedIndex = 0;
+                    clearErrors();
+                    ensureMinimumRows();
+                    updateNavigationArray();
+                    adjustFrameHeights();
+                });
+            }, 500);
+        }
     });
 }
 
