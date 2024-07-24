@@ -163,25 +163,40 @@ function displayResults(results) {
     resultsList.innerHTML = '';
 
     const originalHeight = resultsList.offsetHeight;
+    const tempContainer = document.createElement('div');
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('result-item', 'slide-down');
-        resultItem.style.animationDelay = `${index * 0.05}s`;
+        resultItem.classList.add('result-item');
         resultItem.innerHTML = `
             <span class="rank">#${index + 1}</span>
             <span class="provider">${r.name}</span>
             <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
         `;
-        resultsList.appendChild(resultItem);
+        tempContainer.appendChild(resultItem);
     });
 
+    const newHeight = tempContainer.scrollHeight;
+
+    // Set the new height before starting the animation
     requestAnimationFrame(() => {
-        animateResultsContainer(originalHeight, resultsList.scrollHeight);
+        animateResultsContainer(originalHeight, newHeight, () => {
+            results.forEach((r, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item', 'slide-down');
+                resultItem.style.animationDelay = `${index * 0.05}s`;
+                resultItem.innerHTML = `
+                    <span class="rank">#${index + 1}</span>
+                    <span class="provider">${r.name}</span>
+                    <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
+                `;
+                resultsList.appendChild(resultItem);
+            });
+        });
     });
 }
 
-function animateResultsContainer(fromHeight, toHeight) {
+function animateResultsContainer(fromHeight, toHeight, callback) {
     const resultsContainer = document.querySelector('.results');
     resultsContainer.style.height = `${fromHeight}px`;
     resultsContainer.style.transition = 'height 0.5s ease-in-out';
@@ -194,6 +209,7 @@ function animateResultsContainer(fromHeight, toHeight) {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
         resultsContainerHeight = toHeight;
+        if (callback) callback();
     }, 500);
 }
 
