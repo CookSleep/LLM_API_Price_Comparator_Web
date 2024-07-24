@@ -92,7 +92,7 @@ function getExchangeRate() {
             return response.json();
         })
         .then(data => {
-            exchangeRate = parseFloat(data.exchangeRate);
+            exchangeRate = parseFloat(data['Realtime Currency Exchange Rate']['5. Exchange Rate']);
             exchangeRateValue.textContent = exchangeRate.toFixed(4);
             exchangeRateValue.className = '';
         })
@@ -160,40 +160,44 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
+    const resultsContainer = document.querySelector('.results');
+
     resultsList.innerHTML = '';
+    const initialHeight = resultsContainer.offsetHeight;
+    resultsContainer.style.height = `${initialHeight}px`;
 
-    const originalHeight = resultsList.offsetHeight;
-
-    results.forEach((r, index) => {
+    const newResultItems = results.map((r, index) => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('result-item', 'result-item-fade-in');
-        resultItem.style.animationDelay = `${index * 0.05}s`;
+        resultItem.classList.add('result-item');
         resultItem.innerHTML = `
             <span class="rank">#${index + 1}</span>
             <span class="provider">${r.name}</span>
             <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
         `;
-        resultsList.appendChild(resultItem);
+        return resultItem;
     });
 
-    requestAnimationFrame(() => {
-        animateResultsContainer(originalHeight, resultsList.scrollHeight);
-    });
-}
+    const newHeight = initialHeight + newResultItems.reduce((acc, item) => acc + item.offsetHeight, 0);
 
-function animateResultsContainer(fromHeight, toHeight) {
-    const resultsContainer = document.querySelector('.results');
-    resultsContainer.style.height = `${fromHeight}px`;
     resultsContainer.style.transition = 'height 0.5s ease-in-out';
+    resultsContainer.style.height = `${newHeight}px`;
 
-    requestAnimationFrame(() => {
-        resultsContainer.style.height = `${toHeight}px`;
+    newResultItems.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(-20px)';
+        resultsList.appendChild(item);
+
+        setTimeout(() => {
+            item.style.transition = 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, 50 * index);
     });
 
     setTimeout(() => {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
-        resultsContainerHeight = toHeight;
+        resultsContainerHeight = newHeight;
     }, 500);
 }
 
@@ -226,18 +230,27 @@ function clearResultsList(container, items) {
             return;
         }
 
-        const originalHeight = container.offsetHeight;
+        const resultsContainer = document.querySelector('.results');
+        const initialHeight = resultsContainer.offsetHeight;
+
+        resultsContainer.style.transition = 'height 0.5s ease-in-out';
+        resultsContainer.style.height = `${initialHeight}px`;
 
         items.forEach((item, index) => {
-            item.classList.remove('result-item-fade-in');
-            item.classList.add('result-item-fade-out');
-            item.style.animationDelay = `${index * 0.05}s`;
+            item.style.transition = 'opacity 0.5s ease-in-out, transform 0.5s ease-in-out';
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(-20px)';
         });
 
         setTimeout(() => {
+            resultsContainer.style.height = `${resultsContainer.querySelector('h3').offsetHeight + 20}px`; // 20px for padding
+        }, 50);
+
+        setTimeout(() => {
             container.innerHTML = '';
-            animateResultsContainer(originalHeight, container.scrollHeight);
-            resultsContainerHeight = container.scrollHeight;
+            resultsContainer.style.height = 'auto';
+            resultsContainer.style.transition = '';
+            resultsContainerHeight = resultsContainer.offsetHeight;
             resolve();
         }, 500);
     });
@@ -616,20 +629,5 @@ window.addEventListener('load', () => {
     const resultsContainer = document.querySelector('.results');
     resultsContainerHeight = resultsContainer.offsetHeight;
 });
-
-function onAnimationEnd(element, callback) {
-    const animationEndEvents = ['animationend', 'webkitAnimationEnd', 'oAnimationEnd', 'MSAnimationEnd'];
-    
-    function handleAnimationEnd() {
-        animationEndEvents.forEach(event => {
-            element.removeEventListener(event, handleAnimationEnd);
-        });
-        callback();
-    }
-
-    animationEndEvents.forEach(event => {
-        element.addEventListener(event, handleAnimationEnd);
-    });
-}
 
 adjustFrameHeights();
