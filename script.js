@@ -160,13 +160,10 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
-    const resultsContainer = document.querySelector('.results');
+    resultsList.innerHTML = '';
 
+    const originalHeight = resultsList.offsetHeight;
     const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.visibility = 'hidden';
-    tempContainer.style.height = 'auto';
-    document.body.appendChild(tempContainer);
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
@@ -179,28 +176,22 @@ function displayResults(results) {
         tempContainer.appendChild(resultItem);
     });
 
-    const newHeight = tempContainer.offsetHeight;
-    document.body.removeChild(tempContainer);
+    const newHeight = tempContainer.scrollHeight;
 
-    animateResultsContainer(resultsContainer.offsetHeight, newHeight, () => {
-        resultsList.innerHTML = '';
-        results.forEach((r, index) => {
-            const resultItem = document.createElement('div');
-            resultItem.classList.add('result-item');
-            resultItem.style.opacity = '0';
-            resultItem.style.transform = 'translateY(-20px)';
-            resultItem.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            resultItem.innerHTML = `
-                <span class="rank">#${index + 1}</span>
-                <span class="provider">${r.name}</span>
-                <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
-            `;
-            resultsList.appendChild(resultItem);
-
-            resultItem.offsetHeight;
-
-            resultItem.style.opacity = '1';
-            resultItem.style.transform = 'translateY(0)';
+    // Set the new height before starting the animation
+    requestAnimationFrame(() => {
+        animateResultsContainer(originalHeight, newHeight, () => {
+            results.forEach((r, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item', 'slide-down');
+                resultItem.style.animationDelay = `${index * 0.05}s`;
+                resultItem.innerHTML = `
+                    <span class="rank">#${index + 1}</span>
+                    <span class="provider">${r.name}</span>
+                    <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
+                `;
+                resultsList.appendChild(resultItem);
+            });
         });
     });
 }
@@ -214,13 +205,12 @@ function animateResultsContainer(fromHeight, toHeight, callback) {
         resultsContainer.style.height = `${toHeight}px`;
     });
 
-    resultsContainer.addEventListener('transitionend', function transitionHandler() {
-        resultsContainer.removeEventListener('transitionend', transitionHandler);
+    setTimeout(() => {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
         resultsContainerHeight = toHeight;
         if (callback) callback();
-    });
+    }, 500);
 }
 
 function clearAllData() {
@@ -255,15 +245,17 @@ function clearResultsList(container, items) {
         const originalHeight = container.offsetHeight;
 
         items.forEach((item, index) => {
-            item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            item.style.opacity = '0';
-            item.style.transform = 'translateY(-20px)';
+            item.classList.remove('slide-down');
+            item.classList.add('slide-up');
+            item.style.animationDelay = `${index * 0.05}s`;
         });
 
         setTimeout(() => {
             container.innerHTML = '';
-            animateResultsContainer(originalHeight, 0, resolve);
-        }, 300);
+            animateResultsContainer(originalHeight, container.scrollHeight);
+            resultsContainerHeight = container.scrollHeight;
+            resolve();
+        }, 500);
     });
 }
 
