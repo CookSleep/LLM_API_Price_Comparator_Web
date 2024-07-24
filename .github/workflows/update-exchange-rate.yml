@@ -1,29 +1,19 @@
-name: Update Exchange Rate
+import yfinance as yf
+import json
+from datetime import datetime
 
-on:
-  schedule:
-    - cron: '0 0 * * *'  # 每天 UTC 时间 00:00 运行
-  workflow_dispatch:  # 允许手动触发
+# 获取USD/CNY汇率
+usdcny = yf.Ticker("USDCNY=X")
+rate = usdcny.info['regularMarketPrice']
 
-jobs:
-  update-rate:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests
-    - name: Fetch exchange rate
-      run: |
-        python .github/scripts/fetch_exchange_rate.py
-    - name: Commit and push if changed
-      run: |
-        git config --global user.name 'GitHub Action'
-        git config --global user.email 'action@github.com'
-        git add exchange_rate.json
-        git diff --quiet && git diff --staged --quiet || (git commit -m "Update exchange rate" && git push)
+# 创建包含汇率和更新时间的数据
+data = {
+    "rate": rate,
+    "updated_at": datetime.utcnow().isoformat()
+}
+
+# 将数据保存到JSON文件
+with open('exchange_rate.json', 'w') as f:
+    json.dump(data, f)
+
+print(f"Exchange rate updated: {rate}")
