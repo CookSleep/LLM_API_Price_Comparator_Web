@@ -160,15 +160,14 @@ function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUni
 function displayResults(results) {
     results.sort((a, b) => a.costCNY - b.costCNY);
     const resultsList = document.getElementById('results-list');
-    const resultsContainer = document.querySelector('.results');
-
     resultsList.innerHTML = '';
 
-    const originalHeight = resultsContainer.offsetHeight;
+    const originalHeight = resultsList.offsetHeight;
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
-        resultItem.classList.add('result-item');
+        resultItem.classList.add('result-item', 'slide-down');
+        resultItem.style.animationDelay = `${index * 0.05}s`;
         resultItem.innerHTML = `
             <span class="rank">#${index + 1}</span>
             <span class="provider">${r.name}</span>
@@ -177,26 +176,9 @@ function displayResults(results) {
         resultsList.appendChild(resultItem);
     });
 
-    const newHeight = resultsList.scrollHeight + 
-                      parseFloat(getComputedStyle(resultsContainer).paddingTop) + 
-                      parseFloat(getComputedStyle(resultsContainer).paddingBottom);
-
     requestAnimationFrame(() => {
-        resultsContainer.style.height = `${newHeight}px`;
-        resultsContainer.style.transition = 'height 0.5s ease-in-out';
-        
-        results.forEach((_, index) => {
-            const resultItem = resultsList.children[index];
-            resultItem.classList.add('slide-down');
-            resultItem.style.animationDelay = `${index * 0.05}s`;
-        });
+        animateResultsContainer(originalHeight, resultsList.scrollHeight);
     });
-
-    setTimeout(() => {
-        resultsContainer.style.height = 'auto';
-        resultsContainer.style.transition = '';
-        resultsContainerHeight = newHeight;
-    }, 500);
 }
 
 function animateResultsContainer(fromHeight, toHeight) {
@@ -220,39 +202,44 @@ function clearAllData() {
         if (confirmed) {
             const rows = document.querySelectorAll('#providersTable tbody tr');
             const resultsList = document.getElementById('results-list');
-            const resultsContainer = document.querySelector('.results');
-
             const resultItems = resultsList.querySelectorAll('.result-item');
-            const originalHeight = resultsContainer.offsetHeight;
 
-            resultItems.forEach((item, index) => {
-                item.classList.remove('slide-down');
-                item.classList.add('slide-up');
-                item.style.animationDelay = `${index * 0.05}s`;
+            clearResultsList(resultsList, resultItems).then(() => {
+                return clearAllRows(rows);
+            }).then(() => {
+                document.getElementById('inputtokens').value = '';
+                document.getElementById('outputtokens').value = '';
+                document.getElementById('tokenunit').selectedIndex = 0;
+                clearErrors();
+                ensureMinimumRows();
+                updateNavigationArray();
+                adjustFrameHeights();
             });
-
-            requestAnimationFrame(() => {
-                resultsContainer.style.height = `${originalHeight}px`;
-                resultsContainer.style.transition = 'height 0.5s ease-in-out';
-            });
-
-            setTimeout(() => {
-                resultsList.innerHTML = '';
-                resultsContainer.style.height = 'auto';
-                resultsContainer.style.transition = '';
-                resultsContainerHeight = resultsContainer.offsetHeight;
-
-                clearAllRows(rows).then(() => {
-                    document.getElementById('inputtokens').value = '';
-                    document.getElementById('outputtokens').value = '';
-                    document.getElementById('tokenunit').selectedIndex = 0;
-                    clearErrors();
-                    ensureMinimumRows();
-                    updateNavigationArray();
-                    adjustFrameHeights();
-                });
-            }, 500);
         }
+    });
+}
+
+function clearResultsList(container, items) {
+    return new Promise((resolve) => {
+        if (items.length === 0) {
+            resolve();
+            return;
+        }
+
+        const originalHeight = container.offsetHeight;
+
+        items.forEach((item, index) => {
+            item.classList.remove('slide-down');
+            item.classList.add('slide-up');
+            item.style.animationDelay = `${index * 0.05}s`;
+        });
+
+        setTimeout(() => {
+            container.innerHTML = '';
+            animateResultsContainer(originalHeight, container.scrollHeight);
+            resultsContainerHeight = container.scrollHeight;
+            resolve();
+        }, 500);
     });
 }
 
@@ -516,8 +503,6 @@ function deleteRow(row) {
     const rowIndex = rows.indexOf(row);
 
     if (rows.length > 1) {
-        const tableContainer = document.querySelector('.table-container');
-        const currentHeight = tableContainer.offsetHeight;
         const rowHeight = row.offsetHeight;
 
         row.classList.remove('expand-row');
@@ -570,7 +555,7 @@ function showCustomAlert(message) {
     return new Promise((resolve) => {
         const modal = document.getElementById('customAlert');
         const alertMessage = document.getElementById('alertMessage');
-        const conficnyutton = document.getElementById('alertConfirm');
+        const confirmButton = document.getElementById('alertConfirm');
         const cancelButton = document.getElementById('alertCancel');
 
         alertMessage.textContent = message;
@@ -581,7 +566,7 @@ function showCustomAlert(message) {
             resolve(result);
         };
 
-        conficnyutton.onclick = () => closeModal(true);
+        confirmButton.onclick = () => closeModal(true);
         cancelButton.onclick = () => closeModal(false);
 
         const handleKeyDown = function(e) {
@@ -595,6 +580,10 @@ function showCustomAlert(message) {
         };
 
         document.addEventListener('keydown', handleKeyDown);
+
+        modal.onclose = () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
     });
 }
 
