@@ -24,6 +24,8 @@ jobs:
           python update_exchange_rate.py
 
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_DEPLOY_KEY }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
