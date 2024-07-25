@@ -30,7 +30,7 @@ LLM API Price Comparator Web 是一个在线工具，帮助用户便捷地比较
 5. 查看费用排名，选择合适的服务商。
 
 
-## 自行部署指南
+## 自行部署指南（如果你想自己再部署一个，而不是用我部署好的）
 
 本项目使用 GitHub Actions 自动更新汇率数据，并通过 GitHub Pages 部署静态网站。以下是如何 Fork 本仓库并配置 GitHub Actions 和 GitHub Pages 的步骤。
 
