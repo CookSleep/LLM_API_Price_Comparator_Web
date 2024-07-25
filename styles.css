@@ -74,8 +74,8 @@ h1 {
     vertical-align: text-bottom;
     margin-left: 10px;
     fill: var(--primary-color);
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
 }
 
 .tooltip {
@@ -625,6 +625,14 @@ input:checked + .slider:before {
     transform-origin: top;
 }
 
+footer {
+    text-align: center;
+    padding: 10px 0;
+    background-color: var(--background-color);
+    color: var(--secondary-color);
+    font-size: 0.9em;
+}
+
 @media (max-width: 768px) {
     .header-right {
         align-items: center;
@@ -640,6 +648,7 @@ input:checked + .slider:before {
     }
 
     .tooltip {
+        position: absolute;
         left: 50% !important;
         transform: translateX(-50%);
         width: 90%;
@@ -652,11 +661,12 @@ input:checked + .slider:before {
 
     .input-section {
         flex-direction: column;
+        margin-bottom: 20px;
     }
 
     .token-input {
         margin-right: 0;
-        margin-bottom: 20px;
+        margin-bottom: 0;
     }
 
     .usage-tips {

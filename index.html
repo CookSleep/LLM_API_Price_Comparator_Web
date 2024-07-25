@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM API 价格比较器</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="LLM_API_Price_Comparator.png" type="image/png">
+    <meta name="description" content="LLM API 价格比较器 - 比较不同LLM API服务商的价格,自动获取美元/人民币汇率,帮助用户选择最合适的服务。">
+    <meta name="keywords" content="LLM, API, 价格比较, 汇率, AI, 机器学习, 成本计算">
+    <meta name="author" content="CookSleep">
 </head>
 <body>
     <div id="main-content">
@@ -14,15 +18,14 @@
                     <img src="LLM_API_Price_Comparator.png" alt="LLM API 价格比较器 Logo" class="logo">
                 </div>
                 <div class="header-right">
-                    <h1>LLM API 价格比较器
-                        <svg class="info-icon" viewBox="0 0 24 24" width="24" height="24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-                        </svg>
-                    </h1>
-                    <div class="tooltip">汇率数据来源：Alpha Vantage API<br>每日更新时间：北京时间 09:30</div>
+                    <h1>LLM API 价格比较器</h1>
                     <div class="exchange-rate-container">
                         <span id="exchangeRateLabel">今日汇率 (USD/CNY): </span>
                         <span id="exchangeRateValue">获取中...</span>
+                        <svg class="info-icon" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                        </svg>
+                        <div class="tooltip">汇率数据来源：Alpha Vantage API<br>每日更新时间：北京时间 09:30</div>
                     </div>
                     <a href="https://github.com/CookSleep/LLM_API_Price_Comparator_Web" target="_blank" class="github-link">GitHub @CookSleep</a>
                 </div>
@@ -108,6 +111,10 @@
         </div>
     </div>   
 
+    <footer>
+        <p>本工具不收集、存储或处理任何个人信息<br>所有计算都在您的浏览器中本地进行</p>
+    </footer>    
+    
     <script src="script.js"></script>
 </body>
 </html>
