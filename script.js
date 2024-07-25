@@ -22,17 +22,22 @@ document.addEventListener('DOMContentLoaded', function() {
     infoIcon.addEventListener('mouseleave', hideTooltip);
     infoIcon.addEventListener('touchstart', toggleTooltip);
 
+    window.addEventListener('resize', positionTooltip);
+
     document.addEventListener('touchstart', function(e) {
         if (!tooltip.contains(e.target) && !infoIcon.contains(e.target)) {
             hideTooltip();
         }
     });
+
+    const resultsContainer = document.querySelector('.results');
+    resultsContainerHeight = resultsContainer.offsetHeight;
 });
 
-function showTooltip(e) {
+function showTooltip() {
     const tooltip = document.querySelector('.tooltip');
     tooltip.style.display = 'block';
-    positionTooltip(e);
+    positionTooltip();
 }
 
 function hideTooltip() {
@@ -40,34 +45,33 @@ function hideTooltip() {
     tooltip.style.display = 'none';
 }
 
-function toggleTooltip(e) {
-    e.preventDefault();
+function positionTooltip() {
     const tooltip = document.querySelector('.tooltip');
-    if (tooltip.style.display === 'none' || tooltip.style.display === '') {
-        showTooltip(e);
-    } else {
-        hideTooltip();
-    }
-}
-
-function positionTooltip(e) {
-    const tooltip = document.querySelector('.tooltip');
-    const iconRect = e.target.getBoundingClientRect();
+    const infoIcon = document.querySelector('.info-icon');
+    const iconRect = infoIcon.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
 
     let left = iconRect.left + (iconRect.width / 2) - (tooltipRect.width / 2);
-    let top = iconRect.bottom + 10;
+    let top = iconRect.bottom + window.scrollY;
 
     if (left < 10) left = 10;
     if (left + tooltipRect.width > window.innerWidth - 10) {
         left = window.innerWidth - tooltipRect.width - 10;
     }
-    if (top + tooltipRect.height > window.innerHeight - 10) {
-        top = iconRect.top - tooltipRect.height - 10;
-    }
 
+    tooltip.style.position = 'absolute';
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
+}
+
+function toggleTooltip(e) {
+    e.preventDefault();
+    const tooltip = document.querySelector('.tooltip');
+    if (tooltip.style.display === 'none' || tooltip.style.display === '') {
+        showTooltip();
+    } else {
+        hideTooltip();
+    }
 }
 
 function ensureMinimumRows() {
@@ -84,7 +88,10 @@ function getExchangeRate() {
     exchangeRateValue.textContent = '获取中...';
     exchangeRateValue.className = 'loading';
 
-    fetch('/LLM_API_Price_Comparator_Web/exchange_rate.json')
+    const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const url = isLocalHost ? 'mock_exchange_rate.json' : 'exchange_rate.json';
+
+    fetch(url)
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -105,7 +112,7 @@ function getExchangeRate() {
 
 function calculateCosts() {
     if (!exchangeRate) {
-        showCustomAlert('汇率获取失败，请点击刷新按钮重试。');
+        showCustomAlert('汇率获取失败，\n可能是GItHub Action故障。');
         return;
     }
 
@@ -163,41 +170,52 @@ function displayResults(results) {
     resultsList.innerHTML = '';
 
     const resultsContainer = document.querySelector('.results');
-    const originalHeight = resultsContainer.offsetHeight;
+    const originalHeight = resultsContainer.scrollHeight;
 
-    const tempContainer = document.createElement('div');
-    tempContainer.style.visibility = 'hidden';
-    tempContainer.style.position = 'absolute';
-    tempContainer.style.width = resultsContainer.offsetWidth + 'px';
-    document.body.appendChild(tempContainer);
+    const fragment = document.createDocumentFragment();
 
     results.forEach((r, index) => {
         const resultItem = document.createElement('div');
         resultItem.classList.add('result-item');
+        resultItem.style.opacity = '0';
+        resultItem.style.transform = 'translateY(20px)';
         resultItem.innerHTML = `
             <span class="rank">#${index + 1}</span>
             <span class="provider">${r.name}</span>
             <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
         `;
-        tempContainer.appendChild(resultItem);
+        fragment.appendChild(resultItem);
     });
 
-    const newHeight = tempContainer.offsetHeight;
-    document.body.removeChild(tempContainer);
+    resultsList.appendChild(fragment);
+    
+    const newHeight = resultsList.scrollHeight;
 
     animateResultsContainer(originalHeight, newHeight, () => {
-        results.forEach((r, index) => {
-            const resultItem = document.createElement('div');
-            resultItem.classList.add('result-item', 'slide-down');
-            resultItem.style.animationDelay = `${index * 0.05}s`;
-            resultItem.innerHTML = `
-                <span class="rank">#${index + 1}</span>
-                <span class="provider">${r.name}</span>
-                <span class="cost">${r.costCNY.toFixed(4)} CNY / ${r.costUSD.toFixed(4)} USD</span>
-            `;
-            resultsList.appendChild(resultItem);
+        const resultItems = resultsList.querySelectorAll('.result-item');
+        resultItems.forEach((item, index) => {
+            item.style.transition = `opacity 0.5s ease ${index * 0.05}s, transform 0.5s ease ${index * 0.05}s`;
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
         });
     });
+
+    adjustResultsContainerHeight(resultsContainer);
+}
+
+function adjustResultsContainerHeight(container) {
+    const content = container.innerHTML;
+    const tempDiv = document.createElement('div');
+    tempDiv.style.visibility = 'hidden';
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.width = container.clientWidth + 'px';
+    tempDiv.innerHTML = content;
+    document.body.appendChild(tempDiv);
+
+    const height = tempDiv.offsetHeight;
+    document.body.removeChild(tempDiv);
+
+    container.style.height = height + 'px';
 }
 
 function animateResultsContainer(fromHeight, toHeight, callback) {
@@ -212,7 +230,6 @@ function animateResultsContainer(fromHeight, toHeight, callback) {
     const transitionEndHandler = () => {
         resultsContainer.style.height = 'auto';
         resultsContainer.style.transition = '';
-        resultsContainerHeight = toHeight;
         if (callback) callback();
         resultsContainer.removeEventListener('transitionend', transitionEndHandler);
     };
@@ -249,20 +266,16 @@ function clearResultsList(container, items) {
             return;
         }
 
-        const originalHeight = container.offsetHeight;
-
         items.forEach((item, index) => {
-            item.classList.remove('slide-down');
-            item.classList.add('slide-up');
-            item.style.animationDelay = `${index * 0.05}s`;
+            item.style.transition = `opacity 0.5s ease ${index * 0.05}s, transform 0.5s ease ${index * 0.05}s`;
+            item.style.opacity = '0';
+            item.style.transform = 'translateY(20px)';
         });
 
         setTimeout(() => {
             container.innerHTML = '';
-            animateResultsContainer(originalHeight, container.scrollHeight);
-            resultsContainerHeight = container.scrollHeight;
             resolve();
-        }, 500);
+        }, 500 + items.length * 0.05 * 1000);
     });
 }
 
@@ -516,7 +529,7 @@ function addProviderRow(updateFrameHeights = true) {
     setupWheelSelection();
 
     if (updateFrameHeights) {
-        enqueueAnimation(() => adjustTableContainerHeight(row.offsetHeight));
+        enqueueAnimation(() => adjustTableContainerHeight(row.offsetHeight, 500));
     }
 }
 
@@ -531,7 +544,7 @@ function deleteRow(row) {
         row.classList.remove('expand-row');
         row.classList.add('collapse-row');
 
-        enqueueAnimation(() => adjustTableContainerHeight(-rowHeight, () => {
+        enqueueAnimation(() => adjustTableContainerHeight(-rowHeight, 500, () => {
             if (rows.length > 1) {
                 tbody.removeChild(row);
             } else {
@@ -544,17 +557,17 @@ function deleteRow(row) {
     }
 }
 
-function adjustTableContainerHeight(heightChange, callback) {
+function adjustTableContainerHeight(heightChange, duration, callback) {
     const tableContainer = document.querySelector('.table-container');
     const newHeight = tableContainer.offsetHeight + heightChange;
-    tableContainer.style.transition = 'height 0.5s ease-in-out';
+    tableContainer.style.transition = `height ${duration}ms ease-in-out`;
     tableContainer.style.height = `${newHeight}px`;
 
     setTimeout(() => {
         tableContainer.style.transition = '';
         if (callback) callback();
         playNextAnimation();
-    }, 500);
+    }, duration);
 }
 
 function enqueueAnimation(animation) {
@@ -581,7 +594,7 @@ function showCustomAlert(message) {
         const confirmButton = document.getElementById('alertConfirm');
         const cancelButton = document.getElementById('alertCancel');
 
-        alertMessage.textContent = message;
+        alertMessage.innerHTML = message.replace(/\n/g, '<br>');
         modal.style.display = 'flex';
 
         const closeModal = (result) => {
@@ -638,6 +651,7 @@ function adjustFrameHeights() {
 window.addEventListener('load', () => {
     const resultsContainer = document.querySelector('.results');
     resultsContainerHeight = resultsContainer.offsetHeight;
+    adjustFrameHeights();
 });
 
 function onAnimationEnd(element, callback) {
@@ -655,4 +669,4 @@ function onAnimationEnd(element, callback) {
     });
 }
 
-adjustFrameHeights()
+adjustFrameHeights();
