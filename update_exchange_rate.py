@@ -7,8 +7,7 @@ def fetch_exchange_rate(api_key):
     response = requests.get(url)
     data = response.json()
     if 'Realtime Currency Exchange Rate' in data:
-        rate = data['Realtime Currency Exchange Rate']['5. Exchange Rate']
-        return {"exchangeRate": float(rate)}
+        return data['Realtime Currency Exchange Rate']
     else:
         raise Exception("Error fetching exchange rate")
 
@@ -17,9 +16,9 @@ def main():
     if not api_key:
         raise Exception("No API key found in environment variables")
     
-    exchange_rate_data = fetch_exchange_rate(api_key)
+    exchange_rate = fetch_exchange_rate(api_key)
     with open('exchange_rate.json', 'w') as f:
-        json.dump(exchange_rate_data, f, indent=4)
+        json.dump(exchange_rate, f, indent=4)
 
 if __name__ == '__main__':
     main()
