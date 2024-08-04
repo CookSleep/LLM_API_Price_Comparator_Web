@@ -27,13 +27,13 @@ jobs:
           python update_exchange_rate.py
 
       - name: Check for changes
-        id: git_diff
+        id: check_changes
         run: |
           git fetch
-          git diff --exit-code || echo "Changes detected"
+          git diff --exit-code > /dev/null || echo "has_changes=true" >> $GITHUB_ENV
 
       - name: Commit and push changes
-        if: steps.git_diff.outputs.'Changes detected'
+        if: env.has_changes == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
