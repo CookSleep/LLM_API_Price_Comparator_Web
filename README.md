@@ -55,13 +55,16 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true # 强制使用 Node20
+
 jobs:
   update-exchange-rate:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3 # 使用 v3
 
       - name: Install dependencies
         run: |
@@ -80,7 +83,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add exchange_rate.json
-          git commit -m "Update exchange rate"
+          git diff-index --quiet HEAD || git commit -m "Update exchange rate"
           git push origin HEAD:main
 ```
 
