@@ -1,25 +1,24 @@
+import os
 import requests
 import json
-import os
 
-ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
-
-if not ALPHA_VANTAGE_API_KEY:
-    raise ValueError("No API key provided. Please set the ALPHA_VANTAGE_API_KEY environment variable.")
-
-url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=CNY&apikey={ALPHA_VANTAGE_API_KEY}"
-
-response = requests.get(url)
-
-if response.status_code == 200:
+def fetch_exchange_rate(api_key):
+    url = f'https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=CNY&apikey={api_key}'
+    response = requests.get(url)
     data = response.json()
-    try:
-        exchange_rate = data["Realtime Currency Exchange Rate"]["5. Exchange Rate"]
-        print(f"Exchange rate: {exchange_rate}")
-        with open('exchange_rate.json', 'w') as f:
-            json.dump({"exchangeRate": exchange_rate}, f)
-    except KeyError as e:
-        print(f"KeyError: {e}")
-        print(json.dumps(data, indent=4))
-else:
-    print(f"Error: {response.status_code}")
+    if 'Realtime Currency Exchange Rate' in data:
+        return data['Realtime Currency Exchange Rate']
+    else:
+        raise Exception("Error fetching exchange rate")
+
+def main():
+    api_key = os.getenv('ALPHA_VANTAGE_API_KEY')
+    if not api_key:
+        raise Exception("No API key found in environment variables")
+    
+    exchange_rate = fetch_exchange_rate(api_key)
+    with open('exchange_rate.json', 'w') as f:
+        json.dump(exchange_rate, f, indent=4)
+
+if __name__ == '__main__':
+    main()
