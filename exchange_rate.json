@@ -1,11 +1,3 @@
 {
-    "1. From_Currency Code": "USD",
-    "2. From_Currency Name": "United States Dollar",
-    "3. To_Currency Code": "CNY",
-    "4. To_Currency Name": "Chinese Yuan",
-    "5. Exchange Rate": "7.15950000",
-    "6. Last Refreshed": "2024-08-04 13:16:39",
-    "7. Time Zone": "UTC",
-    "8. Bid Price": "7.15944000",
-    "9. Ask Price": "7.15984000"
+    "exchangeRate": 7.1595
 }
