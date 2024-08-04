@@ -8,13 +8,16 @@ on:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true # 强制使用 Node20
+
 jobs:
   update-exchange-rate:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3 # 更新到 v3
+        uses: actions/checkout@v3 # 使用 v3
 
       - name: Install dependencies
         run: |
