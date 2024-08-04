@@ -7,7 +7,10 @@ def fetch_exchange_rate(api_key):
     response = requests.get(url)
     data = response.json()
     if 'Realtime Currency Exchange Rate' in data:
-        return data['Realtime Currency Exchange Rate']
+        return {
+            "exchangeRate": data['Realtime Currency Exchange Rate']['5. Exchange Rate'],
+            "lastRefreshed": data['Realtime Currency Exchange Rate']['6. Last Refreshed']
+        }
     else:
         raise Exception("Error fetching exchange rate")
 
