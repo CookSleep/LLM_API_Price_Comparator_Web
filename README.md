@@ -10,7 +10,7 @@ LLM API Price Comparator Web 是一个在线工具，帮助用户便捷地比较
 
 该项目是原Windows桌面应用的网页版本，代码主要由Claude 3.5 Sonnet和GPT-4o编写，我提供了非常多的样式、功能设计提议和反馈。
 
-![使用示例](使用示例.png)
+![使用示例](usage_example.png)
 
 ## 功能特性
 
