@@ -151,43 +151,74 @@ function calculateCosts() {
 
     const inputTokens = parseFloat(document.getElementById('inputtokens').value) || 0;
     const outputTokens = parseFloat(document.getElementById('outputtokens').value) || 0;
-    const tokenUnitValue = parseFloat(document.getElementById('tokenunit').value);
-    const inputTokensInBaseUnit = inputTokens * tokenUnitValue;
-    const outputTokensInBaseUnit = outputTokens * tokenUnitValue;
 
-    const results = calculateProviderCosts(inputTokensInBaseUnit, outputTokensInBaseUnit);
+    const results = calculateProviderCosts(inputTokens, outputTokens);
     displayResults(results);
 }
 
-function calculateProviderCosts(inputTokensInBaseUnit, outputTokensInBaseUnit) {
+function get_price_per_token(price, unit) {
+    if (unit === "1000") { // K
+        return price / 1000;
+    } else if (unit === "1000000") { // M
+        return price / 1000000;
+    }
+    return price; 
+}
+
+function calculateProviderCosts(inputTokens, outputTokens) {
     return Array.from(document.querySelectorAll('#providersTable tbody tr'))
-        .map(row => calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUnit))
+        .map(row => calculateProviderCost(row, inputTokens, outputTokens))
         .filter(result => result !== null);
 }
 
-function calculateProviderCost(row, inputTokensInBaseUnit, outputTokensInBaseUnit) {
+function calculateProviderCost(row, inputTokens, outputTokens) {
     try {
-        const providerName = row.querySelector('.provider-name').value;
-        const rechargeAmount = parseFloat(row.querySelector('.recharge-amount').value);
+        const providerName = row.querySelector('.provider-name').value.trim();
+        const recharge_amount = parseFloat(row.querySelector('.recharge-amount').value);
         const currency = row.querySelector('.currency').value;
         const balance = parseFloat(row.querySelector('.balance').value);
-        const inputPrice = parseFloat(row.querySelector('.input-price').value);
-        const samePrice = row.querySelector('.same-price').checked;
-        const outputPrice = samePrice ? inputPrice : parseFloat(row.querySelector('.output-price').value);
-        const tokenUnit = parseFloat(row.querySelector('.token-unit').value);
+        const input_price = parseFloat(row.querySelector('.input-price').value);
+        const output_price = parseFloat(row.querySelector('.output-price').value);
+        const same_price_checked = row.querySelector('.same-price').checked;
+        const price_unit = row.querySelector('.token-unit').value;
 
-        let rechargeAmountCNY = rechargeAmount;
-        if (currency === 'USD') {
-            rechargeAmountCNY *= exchangeRate;
+        if (!providerName || isNaN(recharge_amount) || isNaN(balance) || isNaN(input_price) || (isNaN(output_price) && !same_price_checked)) {
+            return null;
         }
 
-        const costPerTokenInput = (rechargeAmountCNY / balance) * inputPrice / tokenUnit;
-        const costPerTokenOutput = (rechargeAmountCNY / balance) * outputPrice / tokenUnit;
+        // 计算充值汇率
+        // recharge_rate = recharge_amount / recharge_balance
+        const recharge_rate = recharge_amount / balance;
 
-        const totalCostCNY = (costPerTokenInput * inputTokensInBaseUnit + costPerTokenOutput * outputTokensInBaseUnit) / tokenUnit;
-        const totalCostUSD = totalCostCNY / exchangeRate;
+        // 将输入、输出价格转换为每token价格
+        const input_price_per_token = get_price_per_token(input_price, price_unit);
+        const output_price_per_token = same_price_checked ? input_price_per_token : get_price_per_token(output_price, price_unit);
 
-        return { name: providerName, costCNY: totalCostCNY, costUSD: totalCostUSD };
+        // 根据是否区分输入输出计算总费用（balance单位的cost）
+        let total_cost;
+        if (same_price_checked) {
+            // 不区分输入输出
+            total_cost = (inputTokens + outputTokens) * input_price_per_token;
+        } else {
+            // 区分输入输出
+            const input_cost = inputTokens * input_price_per_token;
+            const output_cost = outputTokens * output_price_per_token;
+            total_cost = input_cost + output_cost;
+        }
+
+        // 根据充值货币和汇率换算成CNY和USD
+        let cost_cny, cost_usd;
+        if (currency === "CNY") {
+            // cost in CNY = total_cost * recharge_rate
+            cost_cny = total_cost * recharge_rate;
+            cost_usd = cost_cny / exchangeRate;
+        } else if (currency === "USD") {
+            // cost in USD = total_cost * recharge_rate
+            cost_usd = total_cost * recharge_rate;
+            cost_cny = cost_usd * exchangeRate;
+        }
+
+        return { name: providerName, costCNY: cost_cny, costUSD: cost_usd };
     } catch (error) {
         console.error(`计算错误: ${error.message}`);
         return null;
@@ -279,7 +310,6 @@ function clearAllData() {
             }).then(() => {
                 document.getElementById('inputtokens').value = '';
                 document.getElementById('outputtokens').value = '';
-                document.getElementById('tokenunit').selectedIndex = 0;
                 clearErrors();
                 ensureMinimumRows();
                 updateNavigationArray();
@@ -382,8 +412,7 @@ function clearErrors() {
 function updateNavigationArray() {
     navigationArray = [
         [document.getElementById('inputtokens')],
-        [document.getElementById('outputtokens')],
-        [document.getElementById('tokenunit')]
+        [document.getElementById('outputtokens')]
     ];
 
     const rows = document.querySelectorAll('#providersTable tbody tr');
