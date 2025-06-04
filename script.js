@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     getExchangeRate();
     document.getElementById('calculateBtn').addEventListener('click', calculateCosts);
     document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
+    document.getElementById('saveFormBtn').addEventListener('click', saveCurrentForm);
+    document.getElementById('historyFormBtn').addEventListener('click', showFormHistory);
     document.getElementById('addProviderBtn').addEventListener('click', () => addProviderRow(true));
     ensureMinimumRows();
     updateNavigationArray();
@@ -142,7 +144,7 @@ function getExchangeRate() {
 
 function calculateCosts() {
     if (!exchangeRate) {
-        showCustomAlert('汇率获取失败，\n可能是GItHub Action故障。');
+        showCustomAlert('汇率获取失败，\n可能是GitHub Action故障。');
         return;
     }
 
@@ -431,20 +433,28 @@ function setupKeyboardNavigation() {
 
         switch(e.key) {
             case 'ArrowUp':
-                e.preventDefault();
-                nextElement = findNextElement(currentElement, 'up');
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    nextElement = findNextElement(currentElement, 'up');
+                }
                 break;
             case 'ArrowDown':
-                e.preventDefault();
-                nextElement = findNextElement(currentElement, 'down');
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    nextElement = findNextElement(currentElement, 'down');
+                }
                 break;
             case 'ArrowLeft':
-                e.preventDefault();
-                nextElement = findNextElement(currentElement, 'left');
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    nextElement = findNextElement(currentElement, 'left');
+                }
                 break;
             case 'ArrowRight':
-                e.preventDefault();
-                nextElement = findNextElement(currentElement, 'right');
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    nextElement = findNextElement(currentElement, 'right');
+                }
                 break;
             case 'Enter':
                 if (currentElement.tagName === 'SELECT') {
@@ -726,6 +736,70 @@ function onAnimationEnd(element, callback) {
     animationEndEvents.forEach(event => {
         element.addEventListener(event, handleAnimationEnd);
     });
+}
+
+function getFormData() {
+    const providers = Array.from(document.querySelectorAll('#providersTable tbody tr')).map(row => ({
+        providerName: row.querySelector('.provider-name').value,
+        recharge_amount: row.querySelector('.recharge-amount').value,
+        currency: row.querySelector('.currency').value,
+        balance: row.querySelector('.balance').value,
+        input_price: row.querySelector('.input-price').value,
+        output_price: row.querySelector('.output-price').value,
+        same_price_checked: row.querySelector('.same-price').checked,
+        token_unit: row.querySelector('.token-unit').value
+    }));
+    return {
+        inputTokens: document.getElementById('inputtokens').value,
+        outputTokens: document.getElementById('outputtokens').value,
+        providers
+    };
+}
+
+function populateForm(data) {
+    const tbody = document.querySelector('#providersTable tbody');
+    tbody.innerHTML = '';
+    data.providers.forEach(() => addProviderRow(false));
+    const rows = document.querySelectorAll('#providersTable tbody tr');
+    rows.forEach((row, idx) => {
+        const p = data.providers[idx];
+        row.querySelector('.provider-name').value = p.providerName;
+        row.querySelector('.recharge-amount').value = p.recharge_amount;
+        row.querySelector('.currency').value = p.currency;
+        row.querySelector('.balance').value = p.balance;
+        row.querySelector('.input-price').value = p.input_price;
+        row.querySelector('.output-price').value = p.output_price;
+        row.querySelector('.same-price').checked = p.same_price_checked;
+        row.querySelector('.token-unit').value = p.token_unit;
+        toggleOutputPrice(row, p.same_price_checked);
+    });
+    document.getElementById('inputtokens').value = data.inputTokens;
+    document.getElementById('outputtokens').value = data.outputTokens;
+    document.getElementById('results-list').innerHTML = '';
+    updateNavigationArray();
+    adjustFrameHeights();
+}
+
+function saveCurrentForm() {
+    const name = prompt('请输入表单名称:');
+    if (!name) return;
+    const history = JSON.parse(localStorage.getItem('formHistory') || '[]');
+    history.push({ name, data: getFormData() });
+    localStorage.setItem('formHistory', JSON.stringify(history));
+    showCustomAlert('表单已保存');
+}
+
+function showFormHistory() {
+    const history = JSON.parse(localStorage.getItem('formHistory') || '[]');
+    if (history.length === 0) {
+        showCustomAlert('暂无历史记录');
+        return;
+    }
+    const list = history.map((h, i) => `${i + 1}. ${h.name}`).join('\n');
+    const index = parseInt(prompt(`选择要填充的表单:\n${list}`), 10);
+    if (index && index >= 1 && index <= history.length) {
+        populateForm(history[index - 1].data);
+    }
 }
 
 adjustFrameHeights();
