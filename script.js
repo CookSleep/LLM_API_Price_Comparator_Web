@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
     getExchangeRate();
     document.getElementById('calculateBtn').addEventListener('click', calculateCosts);
     document.getElementById('clearAllBtn').addEventListener('click', clearAllData);
-    document.getElementById('saveFormBtn').addEventListener('click', saveCurrentForm);
-    document.getElementById('historyFormBtn').addEventListener('click', showFormHistory);
+    document.getElementById('saveFormBtn').addEventListener('click', () => window.openSaveFormModal());
+    document.getElementById('historyFormBtn').addEventListener('click', () => window.openHistoryFormModal());
     document.getElementById('addProviderBtn').addEventListener('click', () => addProviderRow(true));
     ensureMinimumRows();
     updateNavigationArray();
@@ -122,39 +122,59 @@ function getExchangeRate() {
 
     const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const url = isLocalHost ? 'mock_exchange_rate.json' : 'exchange_rate.json';
+    
+    console.log('正在获取汇率，使用URL:', url);
 
     fetch(url)
         .then(response => {
             if (!response.ok) {
+                console.error('响应不成功:', response.status);
                 throw new Error('Network response was not ok');
             }
             return response.json();
         })
         .then(data => {
+            console.log('获取到汇率数据:', data);
             exchangeRate = parseFloat(data.exchangeRate);
             exchangeRateValue.textContent = exchangeRate.toFixed(4);
             exchangeRateValue.className = '';
         })
         .catch(error => {
             console.error('获取汇率失败:', error);
-            exchangeRateValue.textContent = '获取失败';
-            exchangeRateValue.className = 'error';
+            // 在本地环境中使用默认汇率
+            if (isLocalHost) {
+                console.log('使用默认汇率');
+                exchangeRate = 7.2468;
+                exchangeRateValue.textContent = exchangeRate.toFixed(4);
+                exchangeRateValue.className = '';
+            } else {
+                exchangeRateValue.textContent = '获取失败';
+                exchangeRateValue.className = 'error';
+            }
         });
 }
 
 function calculateCosts() {
+    console.log('[调试] 点击计算成本按钮');
     if (!exchangeRate) {
+        console.log('[调试] 汇率不存在');
         showCustomAlert('汇率获取失败，\n可能是GitHub Action故障。');
         return;
     }
 
     clearErrors();
-    if (!validateInputs()) return;
+    const valid = validateInputs();
+    console.log('[调试] validateInputs结果:', valid);
+    if (!valid) {
+        showCustomAlert('请检查所有输入项是否填写完整且格式正确');
+        return;
+    }
 
     const inputTokens = parseFloat(document.getElementById('inputtokens').value) || 0;
     const outputTokens = parseFloat(document.getElementById('outputtokens').value) || 0;
-
+    console.log('[调试] inputTokens:', inputTokens, 'outputTokens:', outputTokens);
     const results = calculateProviderCosts(inputTokens, outputTokens);
+    console.log('[调试] 计算结果:', results);
     displayResults(results);
 }
 
@@ -396,13 +416,37 @@ function clearRowData(row) {
 
 function validateInputs() {
     let isValid = true;
-    const inputs = document.querySelectorAll('input[type="number"], input[type="text"]');
+    let firstError = '';
+    // 只校验主表单区，不校验弹窗等其它输入
+    const tableInputs = document.querySelectorAll('#providersTable input[type="number"], #providersTable input[type="text"]');
+    const inputTokens = document.getElementById('inputtokens');
+    const outputTokens = document.getElementById('outputtokens');
+    const inputs = [...tableInputs, inputTokens, outputTokens];
     inputs.forEach(input => {
+        if (!input) return;
+        input.classList.remove('error');
         if (input.value.trim() === '' && !input.disabled) {
             input.classList.add('error');
             isValid = false;
+            if (!firstError) {
+                if (input.id === 'inputtokens') firstError = '请输入“输入token数”';
+                else if (input.id === 'outputtokens') firstError = '请输入“输出token数”';
+                else if (input.classList.contains('provider-name')) firstError = '请填写所有服务商名称';
+                else if (input.classList.contains('recharge-amount')) firstError = '请填写所有充值金额';
+                else if (input.classList.contains('balance')) firstError = '请填写所有余额';
+                else if (input.classList.contains('input-price')) firstError = '请填写所有输入价格';
+                else if (input.classList.contains('output-price')) firstError = '请填写所有输出价格';
+                else firstError = '有未填写的输入项';
+            }
+            console.log('[校验失败] input:', input);
         }
     });
+    if (!isValid) {
+        showCustomAlert(firstError);
+        console.log('[调试] validateInputs 未通过:', firstError);
+    } else {
+        console.log('[调试] validateInputs 全部通过');
+    }
     return isValid;
 }
 
@@ -600,6 +644,7 @@ function addProviderRow(updateFrameHeights = true) {
     if (updateFrameHeights) {
         enqueueAnimation(() => adjustTableContainerHeight(row.offsetHeight, 500));
     }
+    return row;
 }
 
 function deleteRow(row) {

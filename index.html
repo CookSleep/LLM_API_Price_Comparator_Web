@@ -10,6 +10,8 @@
     <title>LLM API 价格比较器</title>
 
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="form-modal.css">
+    <link rel="stylesheet" href="custom-alert.css">
 
     <link rel="icon" href="LLM_API_Price_Comparator.png" type="image/png">
 
@@ -89,7 +91,7 @@
 
                     <ul>
 
-                        <li>使用键盘方向键可以快速在输入、选择框间移动</li>
+                        <li>按住 Ctrl 或 ⌘ 键并使用方向键快速在输入、选择框间移动</li>
 
                         <li>使用鼠标滚轮可以快速切换下拉选项</li>
                     
@@ -209,6 +211,41 @@
 
 
 
+    <!-- 保存表单模态框 -->
+    <div id="saveFormModal" class="modal">
+        <div class="modal-content form-modal-content">
+            <div class="modal-header">
+                <h3>保存表单</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="formName">表单名称：</label>
+                    <input type="text" id="formName" placeholder="请输入表单名称">
+                </div>
+                <button id="saveFormConfirm" class="modal-btn primary-btn">保存</button>
+            </div>
+        </div>
+    </div>
+    <!-- 历史记录模态框 -->
+    <div id="historyFormModal" class="modal">
+        <div class="modal-content form-modal-content">
+            <div class="modal-header">
+                <h3>历史表单</h3>
+                <span class="close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-list-container">
+                    <ul id="formList" class="form-list">
+                        <!-- 这里将动态填充已保存的表单 -->
+                    </ul>
+                </div>
+                <div class="no-forms-message" id="noFormsMessage">暂无保存的表单</div>
+            </div>
+        </div>
+    </div>
+    
+
     <footer>
 
         <p>本工具不收集、存储或处理任何个人信息<br>所有计算都在您的浏览器中本地进行</p>
@@ -218,6 +255,7 @@
     
 
     <script src="script.js"></script>
+    <script src="form-modal.js"></script>
 
 </body>
 
