@@ -441,6 +441,28 @@ function validateInputs() {
             console.log('[校验失败] input:', input);
         }
     });
+    // 数值合法性：到账余额必须大于 0（作除数），其余数值不能为负
+    if (isValid) {
+        const numericInputs = document.querySelectorAll('#providersTable input[type="number"]');
+        const tokenInputs = [document.getElementById('inputtokens'), document.getElementById('outputtokens')];
+        [...numericInputs, ...tokenInputs].forEach(input => {
+            if (!input || input.disabled) return;
+            const v = parseFloat(input.value);
+            if (isNaN(v)) return; // 空值已由上方检查覆盖
+            let msg = '';
+            if (input.classList.contains('balance') && v <= 0) msg = '“到账余额”必须大于 0';
+            else if (v < 0) {
+                msg = input.id === 'inputtokens' ? '“输入token数”不能为负数'
+                    : input.id === 'outputtokens' ? '“输出token数”不能为负数'
+                    : '金额与价格不能为负数';
+            }
+            if (msg) {
+                input.classList.add('error');
+                isValid = false;
+                if (!firstError) firstError = msg;
+            }
+        });
+    }
     if (!isValid) {
         showCustomAlert(firstError);
         console.log('[调试] validateInputs 未通过:', firstError);
