@@ -4,7 +4,7 @@ import json
 
 def fetch_exchange_rate(api_key):
     url = f'https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=CNY&apikey={api_key}'
-    response = requests.get(url)
+    response = requests.get(url, verify=True, timeout=10)
     data = response.json()
     if 'Realtime Currency Exchange Rate' in data:
         return {
